@@ -533,7 +533,7 @@ function clearAll()  { selected.clear(); expired.clear(); renderGrid(); }
 
 // ── Build HTML email body ──
 function buildEmailHtml(name, msg, docs, expiredSet) {
-  const uploadBase = 'https://your-upload-page.glide.page'; // ← החלף בקישור Glide שלך
+  const uploadBase = 'https://itzik-qa-qa.github.io/pharma-docs/upload.html'; // ← החלף בקישור Glide שלך
   const docRows = docs.map(doc => {
     const isExp = expiredSet.has(doc.id);
     const color  = isExp ? '#fff7ed' : '#f9fafb';
