@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>העלאת מסמך</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e2dc;
+    --text: #1a1916;
+    --text-2: #6b6860;
+    --text-3: #9c9a94;
+    --blue: #1a56db;
+    --blue-bg: #eff4ff;
+    --orange: #c05621;
+    --orange-bg: #fff7ed;
+    --orange-border: #fed7aa;
+    --green: #0e7c4a;
+    --green-bg: #ecfdf5;
+    --green-border: #6ee7b7;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: var(--text);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .logo svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 24px; line-height: 1.6; }
+
+  /* Doc info banner */
+  .doc-banner {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    background: var(--orange-bg);
+    border: 1px solid var(--orange-border);
+  }
+  .doc-banner.normal { background: var(--blue-bg); border-color: #a4cafe; }
+  .doc-icon { font-size: 24px; flex-shrink: 0; }
+  .doc-info .doc-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .doc-info .doc-sub  { font-size: 12px; color: var(--text-2); margin-top: 2px; direction: ltr; }
+  .expired-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; margin-top: 5px;
+    background: var(--orange-bg); border: 1px solid var(--orange-border);
+    border-radius: 20px; font-size: 11px; color: var(--orange); font-weight: 500;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--blue);
+    background: var(--blue-bg);
+  }
+  .upload-zone.has-file {
+    border-color: var(--green);
+    background: var(--green-bg);
+  }
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-text { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .upload-sub  { font-size: 12px; color: var(--text-3); }
+  .file-name {
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--green);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .file-name svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Send button */
+  .send-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity .15s;
+  }
+  .send-btn:hover:not(:disabled) { opacity: .85; }
+  .send-btn:disabled { opacity: .45; cursor: default; }
+  .send-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Progress */
+  .progress-wrap { display: none; margin-top: 14px; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+  .progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width .3s; width: 0%; }
+  .progress-label { font-size: 12px; color: var(--text-2); text-align: center; }
+
+  /* Success */
+  .success-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .success-circle {
+    width: 64px; height: 64px;
+    background: var(--green-bg);
+    border: 2px solid var(--green-border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .success-circle svg { width: 28px; height: 28px; fill: none; stroke: var(--green); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .success-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .success-sub   { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: #fef2f2; border: 1px solid #fca5a5;
+    border-radius: var(--radius-sm);
+    font-size: 13px; color: #b91c1c;
+    margin-top: 12px;
+  }
+  .error-msg svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .footer { font-size: 12px; color: var(--text-3); text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Logo -->
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+  </div>
+
+  <!-- Main content -->
+  <div id="main-content">
+    <h1 id="page-title">העלאת מסמך</h1>
+    <p class="subtitle" id="page-sub">מלא את הטופס ועלה את הקובץ המבוקש</p>
+
+    <!-- Doc banner -->
+    <div class="doc-banner" id="doc-banner">
+      <div class="doc-icon" id="doc-icon">📋</div>
+      <div class="doc-info">
+        <div class="doc-name" id="doc-name">מסמך רגולטורי</div>
+        <div class="doc-sub"  id="doc-sub"></div>
+        <div class="expired-badge" id="expired-badge" style="display:none">⚠ פג תוקף — נדרש עדכון</div>
+      </div>
+    </div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="upload-zone"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="handleFile(this.files[0])">
+      <div class="upload-icon" id="zone-icon">☁️</div>
+      <div class="upload-text" id="zone-text">גרור קובץ לכאן או לחץ לבחירה</div>
+      <div class="upload-sub">PDF, JPG, PNG, DOC עד 10MB</div>
+    </div>
+
+    <!-- File name -->
+    <div class="file-name" id="file-name-row">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="file-name-text"></span>
+    </div>
+
+    <!-- Send -->
+    <button class="send-btn" id="send-btn" onclick="uploadFile()" disabled>
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      שלח מסמך
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">מעלה קובץ...</div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="error-msg">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="error-text"></span>
+    </div>
+
+    <div class="divider"></div>
+    <p class="footer">הקובץ יועבר בצורה מאובטחת לצוות הרגולטורי.<br>לשאלות: itzik-qa@ndnsecurity.com</p>
+  </div>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-circle">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="success-title">המסמך הועלה בהצלחה!</div>
+    <p class="success-sub">
+      תודה <strong id="success-client"></strong>,<br>
+      הקובץ התקבל ויטופל בהקדם.<br><br>
+      ניצור אתך קשר אם יידרש מידע נוסף.
+    </p>
+  </div>
+</div>
+
+<script>
+// ── Make.com Webhook ──
+const MAKE_WEBHOOK = 'https://hook.eu2.make.com/kleelrtsjsfhxs8582aqfvif3wpqbz7i';
+
+const DOC_META = {
+  narcotic:   { label: 'רישיון "סם מסוכן" יק"ר', en: 'Dangerous Drug License',       icon: '📋' },
+  pharmacist: { label: 'אישור רוקח אחראי',         en: 'Responsible Pharmacist',       icon: '👨‍⚕️' },
+  gdp:        { label: 'אישור GDP',                 en: 'Good Distribution Practice',   icon: '🚛' },
+  gmp:        { label: 'אישור GMP',                 en: 'Good Manufacturing Practice',  icon: '🏭' },
+  gap:        { label: 'אישור GAP',                 en: 'Good Agricultural Practice',   icon: '🌿' },
+};
+
+// ── Read URL params ──
+const params   = new URLSearchParams(window.location.search);
+const docId    = params.get('doc')     || '';
+const client   = params.get('client') || '';
+const isExpired = params.get('expired') === '1';
+const doc      = DOC_META[docId] || { label: 'מסמך רגולטורי', en: '', icon: '📋' };
+
+// ── Init page ──
+document.getElementById('page-title').textContent = 'העלאת ' + doc.label;
+document.getElementById('page-sub').textContent   = client
+  ? `שלום ${client}, אנא העלה את הקובץ המבוקש`
+  : 'אנא העלה את הקובץ המבוקש';
+document.getElementById('doc-name').textContent   = doc.label;
+document.getElementById('doc-sub').textContent    = doc.en;
+document.getElementById('doc-icon').textContent   = doc.icon;
+
+if (isExpired) {
+  document.getElementById('expired-badge').style.display = 'inline-flex';
+  document.getElementById('doc-banner').classList.remove('normal');
+} else {
+  document.getElementById('doc-banner').classList.add('normal');
+}
+
+let selectedFile = null;
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showError('הקובץ גדול מ-10MB — אנא דחס אותו ונסה שוב'); return; }
+  selectedFile = file;
+  const zone = document.getElementById('upload-zone');
+  zone.classList.add('has-file');
+  document.getElementById('zone-icon').textContent = '✅';
+  document.getElementById('zone-text').textContent = 'קובץ נבחר';
+  const row = document.getElementById('file-name-row');
+  document.getElementById('file-name-text').textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  row.style.display = 'flex';
+  document.getElementById('send-btn').disabled = false;
+  hideError();
+}
+
+async function uploadFile() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  showProgress();
+  hideError();
+
+  try {
+    // Convert file to base64
+    const base64 = await toBase64(selectedFile);
+    setProgress(50, 'שולח...');
+
+    const payload = {
+      client:    client,
+      docId:     docId,
+      docLabel:  doc.label,
+      docEn:     doc.en,
+      isExpired: isExpired,
+      fileName:  selectedFile.name,
+      fileType:  selectedFile.type,
+      fileSize:  selectedFile.size,
+      fileData:  base64,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    const res = await fetch(MAKE_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    setProgress(100, 'הועלה בהצלחה!');
+    setTimeout(showSuccess, 600);
+
+  } catch(e) {
+    btn.disabled = false;
+    hideProgress();
+    showError('שגיאה בשליחה — אנא נסה שוב');
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('שגיאה בקריאת הקובץ'));
+    r.readAsDataURL(file);
+  });
+}
+
+function showProgress() {
+  document.getElementById('progress-wrap').style.display = 'block';
+  setProgress(20, 'מכין קובץ...');
+}
+function hideProgress() { document.getElementById('progress-wrap').style.display = 'none'; }
+function setProgress(pct, label) {
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+function showSuccess() {
+  document.getElementById('main-content').style.display = 'none';
+  const s = document.getElementById('success-screen');
+  s.style.display = 'flex';
+  document.getElementById('success-client').textContent = client || '';
+}
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  document.getElementById('error-text').textContent = msg;
+  el.style.display = 'flex';
+}
+function hideError() { document.getElementById('error-msg').style.display = 'none'; }
+</script>
+</body>
+</html>
