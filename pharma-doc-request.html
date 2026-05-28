@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מערכת בקשת מסמכים רגולטוריים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e2dc;
+    --border-strong: #c8c5bc;
+    --text: #1a1916;
+    --text-2: #6b6860;
+    --text-3: #9c9a94;
+    --blue: #1a56db;
+    --blue-bg: #eff4ff;
+    --blue-border: #a4cafe;
+    --orange: #c05621;
+    --orange-bg: #fff7ed;
+    --orange-border: #fed7aa;
+    --green: #0e7c4a;
+    --green-bg: #ecfdf5;
+    --green-border: #6ee7b7;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--text);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .header-text h1 { font-size: 18px; font-weight: 600; }
+  .header-text p  { font-size: 13px; color: var(--text-2); }
+
+  /* ── Setup Banner ── */
+  #setup-banner {
+    background: var(--orange-bg);
+    border: 1px solid var(--orange-border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+  #setup-banner h2 { font-size: 14px; font-weight: 600; color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .setup-steps { display: flex; flex-direction: column; gap: 10px; }
+  .setup-step { display: flex; align-items: flex-start; gap: 10px; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .setup-step p { font-size: 13px; color: var(--orange); line-height: 1.5; }
+  .setup-step a { color: var(--orange); font-weight: 500; }
+  .setup-step code { background: #fff; border: 1px solid var(--orange-border); border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: monospace; direction: ltr; display: inline-block; }
+  #client-id-row { display: flex; gap: 8px; margin-top: 12px; }
+  #client-id-input {
+    flex: 1; padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: monospace; font-size: 12px;
+    direction: ltr;
+    background: #fff;
+  }
+  #save-client-btn {
+    padding: 8px 16px;
+    background: var(--orange);
+    color: #fff; border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+  }
+  #save-client-btn:hover { background: #9c4317; }
+
+  /* ── Auth bar ── */
+  #auth-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .auth-info { display: flex; align-items: center; gap: 10px; }
+  .auth-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
+  .auth-dot.connected { background: var(--green); }
+  #auth-label { font-size: 13px; color: var(--text-2); }
+  #auth-email { font-size: 13px; font-weight: 500; color: var(--text); }
+  #auth-btn {
+    padding: 7px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Heebo', sans-serif;
+    color: var(--text);
+    transition: background .15s;
+  }
+  #auth-btn:hover { background: var(--bg); }
+  #auth-btn svg { width: 16px; height: 16px; }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── Fields ── */
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .field input, .field textarea {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    background: #fff;
+  }
+  .field textarea { resize: vertical; min-height: 76px; line-height: 1.6; }
+
+  /* ── Doc grid ── */
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .doc-btn {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    cursor: pointer;
+    text-align: right;
+    transition: all .15s;
+    width: 100%;
+  }
+  .doc-btn:hover { border-color: var(--border-strong); background: #fff; }
+  .doc-btn.selected { border-color: var(--blue); background: var(--blue-bg); }
+  .doc-btn .icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; color: var(--text-3); }
+  .doc-btn.selected .icon { color: var(--blue); }
+  .doc-btn .doc-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; }
+  .doc-btn.selected .doc-name { color: var(--blue); }
+  .doc-btn .doc-en { font-size: 11px; color: var(--text-3); margin-top: 2px; direction: ltr; }
+  .doc-btn.selected .doc-en { color: #6b9ff5; }
+  .expired-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 6px; margin-top: 4px;
+    background: var(--orange-bg); border: 1px solid var(--orange-border);
+    border-radius: 20px; font-size: 10px; color: var(--orange); font-weight: 500;
+  }
+  .expired-toggle {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 13px 8px;
+    border: 1px solid var(--blue-border); border-top: none;
+    border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);
+    background: #e8effd; cursor: pointer;
+    font-size: 11px; color: #1a56db;
+    user-select: none;
+  }
+  .expired-toggle.exp-on { background: var(--orange-bg); border-color: var(--orange-border); color: var(--orange); }
+  .expired-toggle input[type=checkbox] { width: 13px; height: 13px; accent-color: var(--orange); cursor: pointer; }
+
+  .controls-row { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 8px; }
+  .link-btn { background: none; border: none; font-size: 12px; color: var(--blue); cursor: pointer; padding: 0; text-decoration: underline; }
+
+  /* ── Send button ── */
+  .send-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  #send-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    background: var(--text);
+    color: #fff; border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    transition: opacity .15s;
+  }
+  #send-btn:hover { opacity: .85; }
+  #send-btn:disabled { opacity: .5; cursor: default; }
+  #send-btn svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #send-status { font-size: 13px; color: var(--text-2); }
+
+  /* ── Success / Error messages ── */
+  .msg {
+    display: none;
+    align-items: center; gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; margin-top: 12px;
+  }
+  .msg.success { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); }
+  .msg.error   { background: var(--red-bg); border: 1px solid #fca5a5; color: var(--red); }
+  .msg svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* ── Sent log ── */
+  #sent-log { margin-top: 20px; }
+  .log-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .log-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .log-name { font-weight: 500; flex: 1; }
+  .log-docs { font-size: 11px; color: var(--text-2); }
+  .log-time { font-size: 11px; color: var(--text-3); }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  @media (max-width: 500px) {
+    .field-row { grid-template-columns: 1fr; }
+    .doc-grid  { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>מערכת בקשת מסמכים רגולטוריים</h1>
+      <p>שליחה ישירה מ-Gmail שלך — ללא ממוצעים</p>
+    </div>
+  </div>
+
+  <!-- Setup Banner -->
+  <div id="setup-banner">
+    <h2>
+      <svg style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      הגדרה ראשונה — נדרשת פעם אחת בלבד
+    </h2>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <p>פתח <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> ← צור פרויקט חדש ← חפש "Gmail API" והפעל אותו</p>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <p>לך ל-<strong>APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID</strong> ← בחר "Web application"</p>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <p>ב-Authorized JavaScript Origins הוסף: <code>http://localhost</code> ואת הכתובת שבה תפעיל את הקובץ</p>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <p>לך ל-<strong>OAuth consent screen</strong> ← הוסף את המייל שלך כ-Test user ← שמור</p>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <p>הדבק את ה-Client ID שקיבלת:</p>
+      </div>
+    </div>
+    <div id="client-id-row">
+      <input type="text" id="client-id-input" placeholder="000000000000-xxxxxxxxxxxxxxxx.apps.googleusercontent.com" dir="ltr">
+      <button id="save-client-btn" onclick="saveClientId()">שמור והמשך</button>
+    </div>
+  </div>
+
+  <!-- Auth bar -->
+  <div id="auth-bar">
+    <div class="auth-info">
+      <div class="auth-dot" id="auth-dot"></div>
+      <span id="auth-label">לא מחובר ל-Gmail</span>
+      <span id="auth-email" style="display:none"></span>
+    </div>
+    <button id="auth-btn" onclick="handleAuth()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      התחבר ל-Gmail
+    </button>
+  </div>
+
+  <!-- Main form -->
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      פרטי הנמען
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>שם מלא</label>
+        <input type="text" id="rec-name" placeholder="ישראל ישראלי">
+      </div>
+      <div class="field">
+        <label>כתובת מייל</label>
+        <input type="email" id="rec-email" placeholder="example@company.com" dir="ltr">
+      </div>
+    </div>
+    <div class="field">
+      <label>הודעה אישית</label>
+      <textarea id="custom-msg">על פי רישומנו ישנם מסמכים שהם פגי תוקף. נשמח בלחיצה על המסמך הפג תוקף שתוסיף את הקובץ המעודכן.</textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      בחר מסמכים נדרשים
+    </div>
+    <div class="controls-row">
+      <button class="link-btn" onclick="selectAll()">בחר הכל</button>
+      <button class="link-btn" onclick="clearAll()">נקה הכל</button>
+    </div>
+    <div class="doc-grid" id="doc-grid"></div>
+  </div>
+
+  <!-- Send -->
+  <div class="send-row">
+    <button id="send-btn" onclick="sendEmail()" disabled>
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      שלח מייל
+    </button>
+    <span id="send-status">יש להתחבר ל-Gmail תחילה</span>
+  </div>
+
+  <div class="msg success" id="msg-ok">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="msg-ok-text"></span>
+  </div>
+  <div class="msg error" id="msg-err">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="msg-err-text"></span>
+  </div>
+
+  <!-- Sent log -->
+  <div id="sent-log">
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:10px">יומן שליחות</div>
+    <div id="log-items"></div>
+  </div>
+</div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+const DOC_TYPES = [
+  { id:'narcotic',   label:'רישיון "סם מסוכן" יק"ר', en:'Dangerous Drug License', icon:'📋' },
+  { id:'pharmacist', label:'אישור רוקח אחראי',         en:'Responsible Pharmacist',    icon:'👨‍⚕️' },
+  { id:'gdp',        label:'אישור GDP',                 en:'Good Distribution Practice', icon:'🚛' },
+  { id:'gmp',        label:'אישור GMP',                 en:'Good Manufacturing Practice',icon:'🏭' },
+  { id:'gap',        label:'אישור GAP',                 en:'Good Agricultural Practice', icon:'🌿' },
+];
+
+let selected = new Set();
+let expired  = new Set();
+let accessToken = null;
+let userEmail   = null;
+let clientId    = localStorage.getItem('gClientId') || '416899141881-vv462p367dlo351921e7irjs31qis8i9.apps.googleusercontent.com';
+
+// ── Init ──
+window.onload = () => {
+  if (clientId) {
+    document.getElementById('client-id-input').value = clientId;
+    document.getElementById('setup-banner').style.display = 'none';
+    initGsi();
+  }
+  renderGrid();
+};
+
+function saveClientId() {
+  const val = document.getElementById('client-id-input').value.trim();
+  if (!val || !val.includes('.apps.googleusercontent.com')) {
+    alert('Client ID לא תקין. ודא שהוא מסתיים ב-.apps.googleusercontent.com'); return;
+  }
+  clientId = val;
+  localStorage.setItem('gClientId', clientId);
+  document.getElementById('setup-banner').style.display = 'none';
+  initGsi();
+}
+
+// ── Google Identity Services (OAuth2 token flow) ──
+function initGsi() {
+  if (!window.google) { setTimeout(initGsi, 300); return; }
+  // Just ready — auth happens on button click
+}
+
+function handleAuth() {
+  if (accessToken) { signOut(); return; }
+  if (!clientId) { document.getElementById('setup-banner').style.display = ''; return; }
+  google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/gmail.send email profile',
+    callback: (resp) => {
+      if (resp.error) { showError('שגיאת חיבור: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      fetchProfile();
+    }
+  }).requestAccessToken();
+}
+
+function fetchProfile() {
+  fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  }).then(r => r.json()).then(info => {
+    userEmail = info.email;
+    setConnected(true);
+  });
+}
+
+function setConnected(on) {
+  document.getElementById('auth-dot').className  = 'auth-dot' + (on ? ' connected' : '');
+  document.getElementById('auth-label').style.display = on ? 'none' : '';
+  document.getElementById('auth-email').style.display = on ? '' : 'none';
+  document.getElementById('auth-email').textContent   = userEmail || '';
+  document.getElementById('auth-btn').innerHTML = on
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>התנתק'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2z"/><polyline points="22,6 12,13 2,6"/></svg>התחבר ל-Gmail';
+  const btn = document.getElementById('send-btn');
+  btn.disabled = !on;
+  document.getElementById('send-status').textContent = on ? ('שולח מ: ' + userEmail) : 'יש להתחבר ל-Gmail תחילה';
+}
+
+function signOut() {
+  accessToken = null; userEmail = null;
+  setConnected(false);
+}
+
+// ── Doc grid ──
+function renderGrid() {
+  const grid = document.getElementById('doc-grid');
+  grid.innerHTML = '';
+  DOC_TYPES.forEach(doc => {
+    const isSel = selected.has(doc.id);
+    const isExp = expired.has(doc.id);
+    const wrap = document.createElement('div');
+
+    const btn = document.createElement('button');
+    btn.className = 'doc-btn' + (isSel ? ' selected' : '');
+    if (isSel) {
+      btn.style.borderBottomLeftRadius = '0';
+      btn.style.borderBottomRightRadius = '0';
+    }
+    btn.innerHTML = `<span class="icon">${doc.icon}</span>
+      <div>
+        <div class="doc-name">${doc.label}</div>
+        <div class="doc-en">${doc.en}</div>
+        ${isExp ? '<span class="expired-badge">⚠ פג תוקף</span>' : ''}
+      </div>`;
+    btn.onclick = () => toggleDoc(doc.id);
+    wrap.appendChild(btn);
+
+    if (isSel) {
+      const tog = document.createElement('label');
+      tog.className = 'expired-toggle' + (isExp ? ' exp-on' : '');
+      tog.innerHTML = `<input type="checkbox" ${isExp ? 'checked' : ''} onchange="toggleExp('${doc.id}',this)" onclick="event.stopPropagation()">
+        <span>${isExp ? '⚠ מסומן כפג תוקף' : 'סמן כפג תוקף'}</span>`;
+      wrap.appendChild(tog);
+    }
+
+    grid.appendChild(wrap);
+  });
+}
+
+function toggleDoc(id) {
+  if (selected.has(id)) { selected.delete(id); expired.delete(id); }
+  else selected.add(id);
+  renderGrid();
+}
+
+function toggleExp(id, cb) {
+  if (cb.checked) expired.add(id); else expired.delete(id);
+  renderGrid();
+}
+
+function selectAll() { DOC_TYPES.forEach(d => selected.add(d.id)); renderGrid(); }
+function clearAll()  { selected.clear(); expired.clear(); renderGrid(); }
+
+// ── Build HTML email body ──
+function buildEmailHtml(name, msg, docs, expiredSet) {
+  const uploadBase = 'https://your-upload-page.glide.page'; // ← החלף בקישור Glide שלך
+  const docRows = docs.map(doc => {
+    const isExp = expiredSet.has(doc.id);
+    const color  = isExp ? '#fff7ed' : '#f9fafb';
+    const border = isExp ? '#fed7aa' : '#e5e7eb';
+    const badge  = isExp ? `<span style="background:#fff7ed;border:1px solid #fed7aa;color:#c05621;font-size:10px;padding:1px 7px;border-radius:20px;font-weight:600;margin-right:6px">פג תוקף</span>` : '';
+    const btnColor = isExp ? '#c05621' : '#1a56db';
+    return `
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid #f3f4f6">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${color};border:1px solid ${border};border-radius:8px;overflow:hidden">
+          <tr>
+            <td style="padding:12px 16px">
+              ${badge}<strong style="font-size:13px">${doc.label}</strong>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px">${doc.en}</div>
+            </td>
+            <td style="padding:12px 16px;text-align:left;white-space:nowrap">
+              <a href="${uploadBase}?doc=${doc.id}&client=${encodeURIComponent(name)}"
+                 style="display:inline-block;background:${btnColor};color:#fff;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">
+                העלה קובץ ↑
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const expCount = [...expiredSet].filter(id => docs.find(d => d.id === id)).length;
+  const alertBanner = expCount > 0 ? `
+  <tr><td style="padding:12px 0">
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 16px;color:#c05621;font-size:13px">
+      ⚠ נמצאו ${expCount} מסמך${expCount>1?'ים':''} פג${expCount>1?'י':''} תוקף הדורש${expCount>1?'ים':''} עדכון
+    </div>
+  </td></tr>` : '';
+
+  return `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f3f4f6">
+<tr><td align="center" style="padding:32px 16px">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden">
+  <tr><td style="background:#1a1916;padding:20px 28px">
+    <span style="color:#ffffff;font-size:16px;font-weight:600">בקשת מסמכים רגולטוריים</span>
+  </td></tr>
+  <tr><td style="padding:28px">
+    <p style="margin:0 0 8px;font-size:15px;color:#1a1916">שלום ${name},</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.7">${msg}</p>
+    ${alertBanner}
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${docRows}
+    </table>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid #f3f4f6;font-size:12px;color:#9ca3af;line-height:1.7">
+      לחץ על כפתור "העלה קובץ" ליד כל מסמך ובחר את הקובץ המתאים (PDF, JPG, PNG).<br>
+      לאחר העלאת כלל המסמכים נחזור אליך בהקדם.<br><br>
+      בברכה,<br>הצוות הרגולטורי
+    </div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+// ── Make.com Webhook URL ──
+const MAKE_WEBHOOK = 'https://hook.eu2.make.com/kleelrtsjsfhxs8582aqfvif3wpqbz7i';
+
+// ── Send: Gmail API + Make.com Webhook ──
+async function sendEmail() {
+  const name  = document.getElementById('rec-name').value.trim();
+  const email = document.getElementById('rec-email').value.trim();
+  const msg   = document.getElementById('custom-msg').value.trim();
+  const docs  = DOC_TYPES.filter(d => selected.has(d.id));
+  const expiredDocs = DOC_TYPES.filter(d => expired.has(d.id));
+
+  if (!name)  { showError('נא להזין שם נמען'); return; }
+  if (!email) { showError('נא להזין כתובת מייל'); return; }
+  if (!docs.length) { showError('נא לבחור לפחות מסמך אחד'); return; }
+  if (!accessToken) { showError('יש להתחבר ל-Gmail תחילה'); return; }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  document.getElementById('send-status').textContent = 'שולח...';
+  hideMessages();
+
+  const htmlBody = buildEmailHtml(name, msg, docs, expired);
+  const subject  = 'עדכון מסמכים רגולטוריים — נדרשת פעולה';
+
+  // Build RFC-2822 message (base64url encoded)
+  const raw = [
+    `To: ${name} <${email}>`,
+    `From: ${userEmail}`,
+    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=UTF-8`,
+    ``,
+    htmlBody
+  ].join('\r\n');
+
+  const encoded = btoa(unescape(encodeURIComponent(raw)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  try {
+    // 1) שלח את המייל דרך Gmail API
+    const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ raw: encoded })
+    });
+
+    if (!gmailRes.ok) {
+      const err = await gmailRes.json();
+      throw new Error(err.error?.message || 'שגיאה בשליחת המייל');
+    }
+
+    // 2) עדכן את Make.com — צור תיקייה ב-Drive ורשום בשיטס
+    await fetch(MAKE_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:         name,
+        email:        email,
+        message:      msg,
+        sender:       userEmail,
+        sentAt:       new Date().toISOString(),
+        docs:         docs.map(d => ({ id: d.id, label: d.label, en: d.en })),
+        expiredDocs:  expiredDocs.map(d => ({ id: d.id, label: d.label })),
+        docsCount:    docs.length,
+        expiredCount: expiredDocs.length
+      })
+    });
+
+    showSuccess(`המייל נשלח בהצלחה ל-${email} — Make.com מעדכן את Drive ו-Sheets`);
+    addLog(name, email, docs);
+    selected.clear(); expired.clear(); renderGrid();
+    document.getElementById('rec-name').value  = '';
+    document.getElementById('rec-email').value = '';
+  } catch(e) {
+    showError('שגיאה: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('send-status').textContent = 'שולח מ: ' + userEmail;
+  }
+}
+
+// ── Helpers ──
+function showSuccess(t) {
+  const el = document.getElementById('msg-ok');
+  document.getElementById('msg-ok-text').textContent = t;
+  el.style.display = 'flex';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+function showError(t) {
+  const el = document.getElementById('msg-err');
+  document.getElementById('msg-err-text').textContent = t;
+  el.style.display = 'flex';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+function hideMessages() {
+  document.getElementById('msg-ok').style.display = 'none';
+  document.getElementById('msg-err').style.display = 'none';
+}
+
+function addLog(name, email, docs) {
+  const container = document.getElementById('log-items');
+  const time = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.innerHTML = `<div class="log-dot"></div>
+    <div class="log-name">${name}</div>
+    <div class="log-docs">${docs.map(d => d.label).join(' · ')}</div>
+    <div class="log-time">${time}</div>`;
+  container.prepend(item);
+}
+</script>
+</body>
+</html>
