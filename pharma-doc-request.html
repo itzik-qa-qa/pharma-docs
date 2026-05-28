@@ -533,7 +533,7 @@ function clearAll()  { selected.clear(); expired.clear(); renderGrid(); }
 
 // ── Build HTML email body ──
 function buildEmailHtml(name, msg, docs, expiredSet) {
-  const uploadBase = 'https://itzik-qa-qa.github.io/pharma-docs/upload.html'; // ← החלף בקישור Glide שלך
+  const uploadBase = 'https://itzik-qa-qa.github.io/pharma-docs/upload';
   const docRows = docs.map(doc => {
     const isExp = expiredSet.has(doc.id);
     const color  = isExp ? '#fff7ed' : '#f9fafb';
@@ -550,7 +550,8 @@ function buildEmailHtml(name, msg, docs, expiredSet) {
               <div style="font-size:11px;color:#9ca3af;margin-top:2px">${doc.en}</div>
             </td>
             <td style="padding:12px 16px;text-align:left;white-space:nowrap">
-              <a href="${uploadBase}?doc=${doc.id}&client=${encodeURIComponent(name)}"
+              <a href="${uploadBase}?doc=${doc.id}&client=${encodeURIComponent(name)}&expired=${expiredSet.has(doc.id)?1:0}"
+                 target="_blank" rel="noopener noreferrer"
                  style="display:inline-block;background:${btnColor};color:#fff;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">
                 העלה קובץ ↑
               </a>
@@ -599,7 +600,7 @@ function buildEmailHtml(name, msg, docs, expiredSet) {
 }
 
 // ── Make.com Webhook URL ──
-const MAKE_WEBHOOK = 'https://hook.eu2.make.com/kleelrtsjsfhxs8582aqfvif3wpqbz7i';
+const MAKE_WEBHOOK = 'https://hook.eu2.make.com/rdb7ih8exibfrnc7eolgko3dhyjts2qs';
 
 // ── Send: Gmail API + Make.com Webhook ──
 async function sendEmail() {
