@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>סקר איכות שירות – נ.ד.נ אחסון והפצה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12283B;
+    --paper:#F4F6F5;
+    --card:#FFFFFF;
+    --teal:#2F6F63;
+    --teal-dark:#1F4E45;
+    --amber:#D98F4E;
+    --line:#DDE3E1;
+    --muted:#5C6E72;
+    --danger:#B4462F;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Heebo',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.brand{ font-family:'Rubik',sans-serif; }
+  .mono{ font-family:'IBM Plex Mono',monospace; }
+
+  .wrap{ max-width:640px; margin:0 auto; padding:0 0 60px; }
+
+  header.top{
+    background:var(--ink);
+    color:#fff;
+    padding:28px 20px 22px;
+    text-align:center;
+  }
+  header.top .brand{
+    font-size:13px;
+    letter-spacing:.06em;
+    color:#9FB8B2;
+    margin-bottom:6px;
+    font-weight:700;
+  }
+  header.top h1{
+    font-size:22px;
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  header.top p{
+    font-size:13.5px;
+    color:#C9D6D3;
+    line-height:1.7;
+    margin:0;
+    max-width:480px;
+    margin-inline:auto;
+  }
+
+  /* route progress */
+  .route-bar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(244,246,245,.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:10px 16px 12px;
+  }
+  .route-track{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    max-width:640px;
+    margin:0 auto;
+    padding:0 4px;
+  }
+  .route-track::before{
+    content:"";
+    position:absolute;
+    top:6px; right:8px; left:8px;
+    height:2px;
+    background:repeating-linear-gradient(to left, var(--line) 0 5px, transparent 5px 9px);
+    z-index:0;
+  }
+  .stop{
+    position:relative; z-index:1;
+    width:14px; height:14px; border-radius:50%;
+    background:var(--card);
+    border:2px solid var(--line);
+    transition:.25s;
+  }
+  .stop.done{ background:var(--teal); border-color:var(--teal); }
+  .stop.active{ border-color:var(--amber); box-shadow:0 0 0 3px rgba(217,143,78,.25); }
+  .route-label{
+    text-align:center; font-size:11.5px; color:var(--muted);
+    margin-top:6px; font-weight:600;
+  }
+  .route-label b{ color:var(--teal-dark); }
+
+  main{ padding:22px 16px 0; }
+
+  .intro-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:18px;
+    font-size:13.5px;
+    color:var(--muted);
+    line-height:1.7;
+  }
+
+  .field{
+    margin-bottom:18px;
+  }
+  .field label{
+    display:block;
+    font-weight:600;
+    font-size:14.5px;
+    margin-bottom:8px;
+  }
+  input[type=email], input[type=text]{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-size:15px;
+    font-family:inherit;
+    background:var(--card);
+    color:var(--ink);
+  }
+  input:focus, textarea:focus, button:focus-visible{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+  }
+
+  section.q{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 18px 16px;
+    margin-bottom:16px;
+    scroll-margin-top:70px;
+  }
+  section.q .qnum{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--teal-dark);
+    background:#EAF1EF;
+    border-radius:6px;
+    padding:2px 8px;
+    margin-bottom:9px;
+  }
+  section.q h2{
+    font-size:16px;
+    margin:0 0 3px;
+    font-weight:700;
+    line-height:1.4;
+  }
+  section.q .sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+
+  .scale{
+    display:flex;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .scale button{
+    flex:1;
+    aspect-ratio:1;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--card);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:16px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:.15s;
+  }
+  .scale button:hover{ border-color:var(--teal); }
+  .scale button.sel{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:14px;
+    padding:0 2px;
+  }
+
+  textarea{
+    width:100%;
+    min-height:64px;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink);
+    resize:vertical;
+  }
+  textarea::placeholder{ color:#9AA8AB; }
+
+  .submit-wrap{ padding:6px 2px 0; }
+  button.submit{
+    width:100%;
+    padding:16px;
+    background:var(--teal-dark);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    font-family:'Rubik',sans-serif;
+    cursor:pointer;
+    transition:.2s;
+  }
+  button.submit:hover{ background:var(--ink); }
+  button.submit:disabled{ opacity:.6; cursor:default; }
+
+  .err{
+    color:var(--danger);
+    font-size:13px;
+    font-weight:600;
+    margin-top:10px;
+    text-align:center;
+    display:none;
+  }
+
+  .done-screen{
+    display:none;
+    text-align:center;
+    padding:60px 24px;
+  }
+  .done-screen .mark{
+    width:56px; height:56px; border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    font-size:26px;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 18px;
+  }
+  .done-screen h2{ font-size:19px; margin:0 0 8px; }
+  .done-screen p{ color:var(--muted); font-size:14px; line-height:1.7; }
+
+  footer.foot{
+    text-align:center;
+    font-size:11px;
+    color:#9AA8AB;
+    padding:22px 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">נ.ד.נ אחסון והפצה בע״מ</div>
+  <h1>סקר שביעות רצון לקוחות 2025</h1>
+  <p>נשמח שתקדיש/י כמה דקות למילוי הסקר – זה עוזר לנו לשפר את השירות. לכל שאלה יש גם שדה טקסט חופשי לפירוט, לא חובה.</p>
+</header>
+
+<div class="route-bar" id="routeBar">
+  <div class="route-track" id="routeTrack"></div>
+  <div class="route-label"><b id="doneCount">0</b>/8 קטגוריות דורגו</div>
+</div>
+
+<div class="wrap">
+  <main id="formView">
+    <div class="intro-card">
+      הדירוג הוא בסקאלה של 1–5, כאשר <b>1 = לא טוב</b> ו־<b>5 = טוב מאוד</b>. סימון הדירוג הוא חובה, ההערה המילולית היא רשות.
+    </div>
+
+    <form id="surveyForm">
+      <div class="field">
+        <label for="phone">מספר טלפון / וואטסאפ *</label>
+        <input type="tel" id="phone" required placeholder="05X-XXXXXXX">
+      </div>
+
+      <div class="field">
+        <label for="custName">שם החברה / איש קשר</label>
+        <input type="text" id="custName" placeholder="לא חובה">
+      </div>
+
+      <div id="questions"></div>
+
+      <div class="submit-wrap">
+        <button type="submit" class="submit" id="submitBtn">שליחת הסקר</button>
+        <div class="err" id="errMsg">נא לדרג את כל הקטגוריות ולמלא מספר טלפון תקין לפני השליחה.</div>
+      </div>
+    </form>
+  </main>
+
+  <div class="done-screen" id="doneScreen">
+    <div class="mark">✓</div>
+    <h2>תודה רבה!</h2>
+    <p>הסקר נשלח ונשמר בהצלחה.<br>המשוב שלך עוזר לנו להשתפר – נעריך כל פרט.</p>
+  </div>
+
+  <footer class="foot">נ.ד.נ אחסון והפצה בע״מ · הנתונים נשמרים באופן מאובטח</footer>
+</div>
+
+<script>
+/* ====== CONFIGURE THIS ====== */
+const WEBHOOK_URL = "https://hook.eu1.make.com/zektiqbalszpin97ctf2h9xroybket9s";
+/* ============================= */
+
+const QUESTIONS = [
+  { key:"receiving",   title:"אופן קבלת הסחורה", sub:"תעודות משלוח, חתימות, טמפרטורה ולחות, אריזה" },
+  { key:"requests",    title:"אופן מתן מענה לבקשות", sub:"כולל בקשות נוספות" },
+  { key:"response",    title:"זמינות ומהירות תגובה", sub:"" },
+  { key:"handling",    title:"משך זמן טיפול בבקשה", sub:"" },
+  { key:"flexibility", title:"גמישות תפעולית", sub:"התייחסות סוכנים" },
+  { key:"distributors",title:"שירותיות מפיצים", sub:"יחס המפיצים, נראות, עזרה וכו׳" },
+  { key:"invoices",    title:"חשבוניות", sub:"חשבונית מפורטת ועונה על הצורך" },
+  { key:"billing",     title:"כספים / גביה", sub:"אופן התשלום, יעילות וכו׳" },
+];
+
+const qContainer = document.getElementById('questions');
+const routeTrack = document.getElementById('routeTrack');
+const doneCount = document.getElementById('doneCount');
+const ratings = {};
+const notes = {};
+
+QUESTIONS.forEach((q, i) => {
+  const sec = document.createElement('section');
+  sec.className = 'q';
+  sec.id = 'q-' + q.key;
+  sec.innerHTML = `
+    <span class="qnum mono">שאלה ${i+1} מתוך ${QUESTIONS.length}</span>
+    <h2>${q.title}</h2>
+    ${q.sub ? `<p class="sub">${q.sub}</p>` : ''}
+    <div class="scale" data-key="${q.key}">
+      ${[1,2,3,4,5].map(n => `<button type="button" data-val="${n}">${n}</button>`).join('')}
+    </div>
+    <div class="scale-labels"><span>לא טוב</span><span>טוב מאוד</span></div>
+    <textarea placeholder="הערה מילולית (לא חובה)" data-notekey="${q.key}"></textarea>
+  `;
+  qContainer.appendChild(sec);
+
+  const stop = document.createElement('div');
+  stop.className = 'stop';
+  stop.id = 'stop-' + q.key;
+  routeTrack.appendChild(stop);
+});
+
+qContainer.addEventListener('click', (e) => {
+  const btn = e.target.closest('.scale button');
+  if (!btn) return;
+  const key = btn.closest('.scale').dataset.key;
+  ratings[key] = Number(btn.dataset.val);
+  btn.closest('.scale').querySelectorAll('button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('stop-' + key).classList.add('done');
+  updateCount();
+});
+
+qContainer.addEventListener('input', (e) => {
+  if (e.target.matches('textarea[data-notekey]')) {
+    notes[e.target.dataset.notekey] = e.target.value;
+  }
+});
+
+function updateCount(){
+  doneCount.textContent = Object.keys(ratings).length;
+}
+
+// active stop while scrolling
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    const key = en.target.id.replace('q-','');
+    const stop = document.getElementById('stop-' + key);
+    if (en.isIntersecting) stop.classList.add('active');
+    else stop.classList.remove('active');
+  });
+}, { rootMargin: '-40% 0px -50% 0px' });
+QUESTIONS.forEach(q => io.observe(document.getElementById('q-' + q.key)));
+
+document.getElementById('surveyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const phone = document.getElementById('phone').value.trim();
+  const errMsg = document.getElementById('errMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const phoneOk = /^[\d\-\+\s]{7,15}$/.test(phone);
+  const allRated = QUESTIONS.every(q => ratings[q.key]);
+
+  if (!phoneOk || !allRated) {
+    errMsg.style.display = 'block';
+    return;
+  }
+  errMsg.style.display = 'none';
+
+  const payload = {
+    phone,
+    customer: document.getElementById('custName').value.trim(),
+    submitted_at: new Date().toISOString(),
+  };
+  QUESTIONS.forEach(q => {
+    payload[q.key + '_score'] = ratings[q.key];
+    payload[q.key + '_note'] = notes[q.key] || '';
+  });
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'שולח...';
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('routeBar').style.display = 'none';
+    document.getElementById('doneScreen').style.display = 'block';
+  } catch (err) {
+    errMsg.textContent = 'אירעה שגיאה בשליחה. נא לנסות שוב.';
+    errMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'שליחת הסקר';
+  }
+});
+</script>
+
+</body>
+</html>
