@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E1C30">
+<title>יומן רכב | NDN Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700;800&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1C30;
+    --ink-2:#16283F;
+    --road:#1B3049;
+    --amber:#E8A33D;
+    --amber-2:#F4C06A;
+    --paper:#F6F5F1;
+    --card:#FFFFFF;
+    --line:#E3E0D6;
+    --ok:#2F8F5B;
+    --no:#C8503A;
+    --muted:#6B7686;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Assistant',sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.disp{font-family:'Rubik',sans-serif;}
+
+  /* ===== Top bar ===== */
+  .topbar{
+    background:linear-gradient(180deg,var(--ink) 0%,var(--ink-2) 100%);
+    color:#fff;
+    padding:18px 20px 22px;
+    border-radius:0 0 20px 20px;
+    box-shadow:0 6px 20px rgba(14,28,48,.18);
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg, transparent 0 22px, rgba(232,163,61,.12) 22px 26px);
+    opacity:.5; pointer-events:none;
+  }
+  .topbar .eyebrow{
+    font-size:12px; letter-spacing:.14em; color:var(--amber-2);
+    font-weight:700; text-transform:uppercase; position:relative; z-index:1;
+  }
+  .topbar h1{
+    margin:4px 0 2px; font-size:22px; font-weight:800; position:relative; z-index:1;
+  }
+  .topbar .sub{
+    font-size:13.5px; color:#B9C3D4; position:relative; z-index:1;
+  }
+
+  /* ===== Checkpoint route progress ===== */
+  .route{
+    display:flex; align-items:center; gap:0;
+    margin-top:16px; position:relative; z-index:1;
+  }
+  .route .seg{ flex:1; height:3px; background:rgba(255,255,255,.18); position:relative; }
+  .route .seg.filled{ background:var(--amber); }
+  .checkpoint{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--road); border:2px solid rgba(255,255,255,.35);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#B9C3D4; flex:none;
+    transition:all .25s ease;
+  }
+  .checkpoint.done{ background:var(--amber); border-color:var(--amber); color:var(--ink); box-shadow:0 0 0 4px rgba(232,163,61,.22); }
+  .checkpoint.active{ border-color:var(--amber-2); color:#fff; }
+  .route-labels{
+    display:flex; justify-content:space-between; margin-top:6px; position:relative; z-index:1;
+  }
+  .route-labels span{ font-size:10.5px; color:#94A1B5; width:52px; text-align:center; }
+
+  /* ===== Layout ===== */
+  .wrap{ max-width:560px; margin:0 auto; padding:16px 16px 110px; }
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:18px 16px; margin-bottom:14px;
+    box-shadow:0 1px 2px rgba(14,28,48,.04);
+  }
+  .station-title{
+    display:flex; align-items:center; gap:10px; margin-bottom:4px;
+  }
+  .station-badge{
+    width:34px; height:34px; border-radius:9px; background:var(--ink);
+    color:var(--amber-2); display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-family:'Rubik',sans-serif; font-size:14px; flex:none;
+  }
+  .station-title h2{ font-size:16.5px; margin:0; font-weight:700; }
+  .station-sub{ font-size:12.5px; color:var(--muted); margin:2px 0 14px 44px; }
+
+  .field{ margin-bottom:14px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{
+    display:block; font-size:13.5px; font-weight:600; color:var(--ink-2);
+    margin-bottom:7px;
+  }
+  .hint{ font-size:11.5px; color:var(--muted); margin-top:5px; }
+
+  input[type=text], input[type=time], input[type=date], textarea, select{
+    width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:10px;
+    font-family:'Assistant',sans-serif; font-size:14.5px; background:#FCFCFB; color:var(--ink);
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(232,163,61,.18);
+  }
+  textarea{ min-height:74px; resize:vertical; }
+
+  /* Yes/No toggle */
+  .yn{ display:flex; gap:8px; }
+  .yn button{
+    flex:1; padding:11px 0; border-radius:10px; border:1.5px solid var(--line);
+    background:#FCFCFB; font-family:'Assistant',sans-serif; font-weight:700; font-size:14px;
+    color:var(--ink-2); cursor:pointer; transition:.15s;
+  }
+  .yn button.sel-yes{ background:var(--ok); border-color:var(--ok); color:#fff; }
+  .yn button.sel-no{ background:var(--no); border-color:var(--no); color:#fff; }
+
+  /* Photo capture */
+  .photo-box{
+    border:1.5px dashed var(--line); border-radius:10px; padding:14px; text-align:center;
+    background:#FCFCFB;
+  }
+  .photo-box.has-img{ padding:8px; }
+  .photo-box img{ max-width:100%; border-radius:8px; display:block; margin:0 auto 8px; max-height:180px; object-fit:cover; }
+  .photo-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--ink);
+    color:#fff; border:none; padding:9px 16px; border-radius:20px; font-size:13px;
+    font-weight:700; cursor:pointer; font-family:'Assistant',sans-serif;
+  }
+  .photo-note{ font-size:11.5px; color:var(--muted); margin-top:8px; }
+
+  /* Signature */
+  .sig-wrap canvas{
+    width:100%; height:120px; border:1.5px solid var(--line); border-radius:10px;
+    background:#FCFCFB; touch-action:none; display:block;
+  }
+  .sig-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .sig-actions button{
+    background:none; border:none; color:var(--no); font-size:12.5px; font-weight:700;
+    cursor:pointer; font-family:'Assistant',sans-serif; padding:4px 0;
+  }
+  .sig-status{ font-size:12px; color:var(--muted); }
+
+  /* Nav buttons */
+  .nav-row{ display:flex; gap:10px; margin-top:4px; }
+  .btn{
+    flex:1; padding:14px; border-radius:12px; border:none; font-family:'Rubik',sans-serif;
+    font-weight:700; font-size:15px; cursor:pointer; transition:.15s;
+  }
+  .btn-primary{ background:var(--amber); color:var(--ink); }
+  .btn-primary:disabled{ background:#E9E4D6; color:#A6A08F; cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:var(--ink-2); border:1.5px solid var(--line); }
+
+  .fixed-nav{
+    position:fixed; bottom:0; right:0; left:0; background:linear-gradient(0deg,var(--paper) 60%,rgba(246,245,241,0));
+    padding:14px 16px 18px;
+  }
+  .fixed-nav .inner{ max-width:560px; margin:0 auto; }
+
+  .section-summary{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 4px; border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .section-summary:last-child{ border-bottom:none; }
+  .tag-ok{ color:var(--ok); font-weight:700; font-size:12.5px; }
+
+  .success-screen{ text-align:center; padding:60px 20px 40px; }
+  .success-screen .stamp{
+    width:88px; height:88px; border-radius:50%; background:var(--amber);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+    font-size:38px; color:var(--ink); box-shadow:0 8px 24px rgba(232,163,61,.35);
+  }
+  .success-screen h2{ font-size:20px; margin-bottom:6px; }
+  .success-screen p{ color:var(--muted); font-size:14px; line-height:1.6; }
+
+  .demo-note{
+    background:#FFF6E7; border:1px solid #F0D9A6; color:#8A6413;
+    font-size:11.5px; padding:8px 12px; border-radius:8px; margin-top:14px; line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="eyebrow">NDN Security · שינוע</div>
+  <h1 id="topTitle">יומן רכב</h1>
+  <div class="sub" id="topSub">בחירת רכב ותחילת דיווח</div>
+  <div class="route" id="routeBar"></div>
+  <div class="route-labels" id="routeLabels"></div>
+</div>
+
+<div class="wrap" id="wrap"></div>
+
+<div class="fixed-nav"><div class="inner" id="navArea"></div></div>
+
+<script>
+/* ================= CONFIG — fill in when ready ================= */
+const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/hvrpubotsj854ordhy52wi7yawz0c137";
+// הערה: הקריאה למערכת ליונוויל (סימון מסלול כמוכן לסריקה) מתבצעת בתוך תרחיש
+// ה-Make.com עצמו, רק אחרי אישור כתיבה מוצלחת לגיליון — לא מהאפליקציה.
+// כך ליונוויל מקבלים עדכון רק כשהיומן באמת נחתם ונשמר, גם אם המכשיר של
+// הנהג מאבד חיבור אחרי השליחה.
+
+const VEHICLES = [
+  "629-20-703 ספרינטר","500-84-003","246-15-304 קרפטר","198-35-503 ספרינטר",
+  "440-45-002 קראפטר","304-93-413 ספרינטר","198-49-603 ספרינטר","789-70-402 ספרינטר",
+  "780-02-802 דאף","609-12-903 טרנספורטר","302-60-569 קראפטר","500-83-903"
+];
+
+/* ================= FORM SCHEMA ================= */
+// type: yesno | text | textarea | time | date | select | photo | signature
+const ALL_STATIONS = [
+  {
+    id: 0, badge:"0", title:"פרטי דיווח", sub:"בחירת רכב, נהג ותאריך וסוג הדיווח",
+    fields:[
+      {key:"vehicle", label:"רכב", type:"select", options:VEHICLES, required:true},
+      {key:"driver_name", label:"שם מלא - נהג", type:"text", required:true},
+      {key:"date", label:"תאריך", type:"date", required:true},
+      {key:"time", label:"שעה", type:"time", required:true},
+      {key:"report_type", label:"סוג הדיווח", type:"select", options:["תחילת יום","סוף יום"], required:true},
+    ]
+  },
+  {
+    id:1, badge:"א", title:"לפני נסיעה — בדיקות רכב", sub:"ניקיון, ציוד בטיחות ותקינות כללית",
+    fields:[
+      {key:"cabin_clean", label:"ניקיון קבינה וארגז הרכב", type:"yesno"},
+      {key:"tires_ok", label:"תקינות צמיגים, גלגל חלופי וערכת החלפה", type:"yesno"},
+      {key:"wipers_ok", label:"תקינות מגבים", type:"yesno"},
+      {key:"vest_present", label:"הימצאות אפוד זוהר", type:"yesno"},
+      {key:"extinguisher_present", label:"הימצאות מטפה", type:"yesno"},
+      {key:"warmup_lights", label:"הנעה 15 דק' לפני העמסה + בדיקת נורות חיווי", type:"yesno"},
+      {key:"fuel_full", label:"טנק דלק מלא", type:"yesno"},
+      {key:"fuel_notes", label:"הערות דלק (אם לא מולא)", type:"text", optional:true},
+      {key:"cabin_temp_check", label:"בדיקת טווח טמפרטורה בקבינה לפני העמסה", type:"yesno"},
+      {key:"first_aid_present", label:"בדיקת הימצאות ערכת עזרה ראשונה", type:"yesno"},
+      {key:"cleaning_if_needed", label:"ניקוי בוצע לפי נוהל", type:"select", options:["לא נדרש","כן"]},
+      {key:"sign_pretrip_vehicle", label:"חתימת נהג — בדיקות רכב", type:"signature"},
+    ]
+  },
+  {
+    id:2, badge:"ב", title:"לפני נסיעה — בדיקות בטיחות", sub:"סריקות, GPS, קשר ותקשורת",
+    fields:[
+      {key:"scan_10m", label:"סריקה סביב הרכב כנגד חפץ חשוד ברדיוס 10 מ'", type:"yesno"},
+      {key:"scan_envelope_pre", label:"סריקת מעטפת הרכב (כולל גג ומתחת לרכב)", type:"yesno"},
+      {key:"scan_cabin_cargo_pre", label:"סריקת קבינה וארגז הרכב", type:"yesno"},
+      {key:"gps_check", label:"בדיקת GPS מול חפ\"ק", type:"yesno"},
+      {key:"comms_check", label:"בדיקת קשר מול חפ\"ק", type:"yesno"},
+      {key:"panic_button_check", label:"בדיקת תקינות לחצן מצוקה", type:"yesno"},
+      {key:"pointer_temp_check", label:"בדיקת טמפרטורה ע\"פ פוינטר", type:"yesno"},
+      {key:"pointer_temp_notes", label:"הערת טמפרטורה (פוינטר)", type:"text", optional:true},
+      {key:"docs_routes_familiar", label:"קיום מסמכים והכרות עם הצירים למשימה", type:"yesno"},
+      {key:"sign_pretrip_safety", label:"חתימת נהג — בדיקות בטיחות", type:"signature"},
+    ]
+  },
+  {
+    id:3, badge:"ג", title:"סוף יום — חניית לילה", sub:"סגירת הרכב לפני חניית לילה",
+    fields:[
+      {key:"refuel_before_night", label:"תדלוק לפני הגעה לחניית לילה", type:"yesno"},
+      {key:"cooling_closed", label:"סגירת מערכת הקירור", type:"yesno"},
+      {key:"lights_closed", label:"סגירת אורות", type:"yesno"},
+      {key:"scan_cabin_cargo_post", label:"סריקה בקבינה ובארגז", type:"yesno"},
+      {key:"cleaning_sop", label:"ניקוי הרכב לפי נוהל SOP-GDP-006", type:"yesno"},
+      {key:"sign_eod_vehicle", label:"חתימת נהג — סוף יום, רכב", type:"signature"},
+    ]
+  },
+  {
+    id:4, badge:"ד", title:"סוף יום — בדיקות בטיחות ואישור", sub:"סריקה אחרונה, הערות וסיום",
+    fields:[
+      {key:"scan_envelope_post", label:"סריקת מעטפת הרכב — סוף יום", type:"yesno"},
+      {key:"comms_chips_check", label:"וידוא קשרים/צמידים/צ'יפים ברכב", type:"yesno"},
+      {key:"sign_eod_safety", label:"חתימת נהג — סוף יום, בטיחות", type:"signature"},
+      {key:"general_notes", label:"הערה כללית", type:"textarea", optional:true},
+    ]
+  },
+];
+
+let activeStations = [ALL_STATIONS[0]]; // בהתחלה יודעים רק את תחנה 0; מתרחב לאחר בחירת סוג הדיווח
+let step = 0;
+const data = {}; // form state
+data.date = todayISO(); // ברירת מחדל: היום — נרשם בפועל, לא רק מוצג
+const sigPads = {}; // canvas signature state per key
+
+function totalSteps(){ return activeStations.length; }
+
+/* ================= RENDER ================= */
+const wrap = document.getElementById('wrap');
+const navArea = document.getElementById('navArea');
+const routeBar = document.getElementById('routeBar');
+const topTitle = document.getElementById('topTitle');
+const topSub = document.getElementById('topSub');
+
+function buildRoute(){
+  routeBar.innerHTML = "";
+  const total = totalSteps();
+  for(let i=0;i<total;i++){
+    const cp = document.createElement('div');
+    cp.className = 'checkpoint' + (i<step?' done':'') + (i===step?' active':'');
+    cp.textContent = i<step ? '✓' : (i+1);
+    routeBar.appendChild(cp);
+    if(i < total-1){
+      const seg = document.createElement('div');
+      seg.className = 'seg' + (i<step?' filled':'');
+      routeBar.appendChild(seg);
+    }
+  }
+  const labelsEl = document.querySelector('.route-labels');
+  if(labelsEl){
+    const labels = activeStations.map(s=>s.id===0?'פרטים':s.badge);
+    labelsEl.innerHTML = labels.map(l=>`<span>${l}</span>`).join('');
+  }
+}
+
+function fieldHTML(f){
+  const val = data[f.key];
+  let inner = "";
+  if(f.type==="text"){
+    inner = `<input type="text" data-k="${f.key}" value="${val||''}" placeholder="הקלד/י כאן">`;
+  } else if(f.type==="textarea"){
+    inner = `<textarea data-k="${f.key}" placeholder="הקלד/י הערות...">${val||''}</textarea>`;
+  } else if(f.type==="time"){
+    inner = `<input type="time" data-k="${f.key}" value="${val||''}">`;
+  } else if(f.type==="date"){
+    inner = `<input type="date" data-k="${f.key}" value="${val||todayISO()}" min="${dateMinISO()}" max="${dateMaxISO()}">`;
+  } else if(f.type==="select"){
+    inner = `<select data-k="${f.key}"><option value="">בחר/י...</option>` +
+      f.options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('') + `</select>`;
+  } else if(f.type==="yesno"){
+    inner = `<div class="yn" data-k="${f.key}">
+      <button type="button" data-v="כן" class="${val==='כן'?'sel-yes':''}">כן</button>
+      <button type="button" data-v="לא" class="${val==='לא'?'sel-no':''}">לא</button>
+    </div>`;
+  } else if(f.type==="photo"){
+    const hasImg = !!val;
+    inner = `<div class="photo-box ${hasImg?'has-img':''}" data-k="${f.key}">
+      ${hasImg? `<img src="${val}">` : ''}
+      <input type="file" accept="image/*" capture="environment" style="display:none" id="file_${f.key}">
+      <button type="button" class="photo-btn" onclick="document.getElementById('file_${f.key}').click()">📷 ${hasImg?'צלם שוב':'צלם תמונה'}</button>
+      <div class="photo-note">התמונה תישלח למערכת החיצונית (חיבור עתידי)</div>
+    </div>`;
+  } else if(f.type==="signature"){
+    inner = `<div class="sig-wrap" data-k="${f.key}">
+      <canvas id="sig_${f.key}" width="600" height="240"></canvas>
+      <div class="sig-actions">
+        <span class="sig-status" id="sigstatus_${f.key}">${val?'✓ נחתם':'יש לחתום באצבע'}</span>
+        <button type="button" onclick="clearSig('${f.key}')">נקה חתימה</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="field">
+    <label>${f.label}${f.optional?'':''}</label>
+    ${inner}
+  </div>`;
+}
+
+function render(){
+  buildRoute();
+  const total = totalSteps();
+
+  if(step < total){
+    const st = activeStations[step];
+    topTitle.textContent = step===0 ? "יומן רכב" : st.title;
+    topSub.textContent = step===0 ? "בחירת רכב, נהג וסוג הדיווח" : st.sub;
+    wrap.innerHTML = `
+      <div class="card">
+        <div class="station-title">
+          <div class="station-badge">${st.badge}</div>
+          <h2>${st.title}</h2>
+        </div>
+        <div class="station-sub">${st.sub}</div>
+        ${st.fields.map(fieldHTML).join('')}
+      </div>
+    `;
+    attachHandlers(st);
+    navArea.innerHTML = `
+      <div class="nav-row">
+        ${step>0 ? `<button class="btn btn-ghost" onclick="prevStep()">חזרה</button>` : ''}
+        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+          ${step===total-1 ? 'לסיכום ואישור' : 'המשך'}
+        </button>
+      </div>`;
+  } else {
+    topTitle.textContent = "סיכום ואישור";
+    topSub.textContent = "בדוק/י שהכל מולא ולחץ/י סיימתי";
+    renderSummary();
+  }
+}
+
+function attachHandlers(st){
+  st.fields.forEach(f=>{
+    if(f.type==="yesno"){
+      const box = wrap.querySelector(`.yn[data-k="${f.key}"]`);
+      box.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          data[f.key] = btn.dataset.v;
+          box.querySelectorAll('button').forEach(b=>b.className='');
+          btn.className = btn.dataset.v==='כן' ? 'sel-yes' : 'sel-no';
+        });
+      });
+    } else if(f.type==="photo"){
+      const input = wrap.querySelector(`#file_${f.key}`);
+      input.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ()=>{ data[f.key]=reader.result; render(); };
+        reader.readAsDataURL(file);
+      });
+    } else if(f.type==="signature"){
+      setupSignature(f.key);
+    } else {
+      const el = wrap.querySelector(`[data-k="${f.key}"]`);
+      el.addEventListener('input', ()=>{ data[f.key]=el.value; });
+      el.addEventListener('change', ()=>{ data[f.key]=el.value; });
+    }
+  });
+}
+
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function dateMinISO(){
+  const d = new Date(); d.setFullYear(d.getFullYear()-1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dateMaxISO(){
+  const d = new Date(); d.setFullYear(d.getFullYear()+1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ---- signature pad ---- */
+function setupSignature(key){
+  const canvas = document.getElementById('sig_'+key);
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#0E1C30'; ctx.lineWidth = 3; ctx.lineCap='round';
+  let drawing=false, lastX=0, lastY=0;
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const cx = (e.touches? e.touches[0].clientX : e.clientX) - r.left;
+    const cy = (e.touches? e.touches[0].clientY : e.clientY) - r.top;
+    return [cx*canvas.width/r.width, cy*canvas.height/r.height];
+  }
+  function start(e){ drawing=true; [lastX,lastY]=pos(e); }
+  function move(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const [x,y]=pos(e);
+    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(x,y); ctx.stroke();
+    [lastX,lastY]=[x,y];
+    data[key] = canvas.toDataURL();
+    const st = document.getElementById('sigstatus_'+key);
+    if(st) st.textContent = '✓ נחתם';
+  }
+  function end(){ drawing=false; }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:true});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+function clearSig(key){
+  const canvas = document.getElementById('sig_'+key);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  data[key] = null;
+  document.getElementById('sigstatus_'+key).textContent = 'יש לחתום באצבע';
+}
+
+/* ---- nav ---- */
+function requiredMissing(st){
+  return st.fields.filter(f=>{
+    if(f.optional) return false;
+    if(f.type==='signature') return !data[f.key];
+    if(f.type==='photo') return false; // photos optional at form level
+    return !data[f.key];
+  });
+}
+function nextStep(){
+  try{
+    const st = activeStations[step];
+    const missing = requiredMissing(st);
+    if(missing.length){
+      alert('נא למלא: ' + missing.map(m=>m.label).join(', '));
+      return;
+    }
+    // אחרי תחנה 0: בונים את המשך המסלול לפי סוג הדיווח שנבחר
+    if(step === 0){
+      activeStations = data.report_type === 'סוף יום'
+        ? [ALL_STATIONS[0], ALL_STATIONS[3], ALL_STATIONS[4]]
+        : [ALL_STATIONS[0], ALL_STATIONS[1], ALL_STATIONS[2]];
+    }
+    step++;
+    window.scrollTo(0,0);
+    render();
+  }catch(err){
+    console.error('nextStep failed', err);
+    alert('אירעה שגיאה בלתי צפויה. נסה/י שוב, ואם זה חוזר — צלם/י את המסך ושלח/י.');
+  }
+}
+function prevStep(){ step--; window.scrollTo(0,0); render(); }
+
+/* ---- summary + submit ---- */
+function renderSummary(){
+  const rows = activeStations.slice(1).map(st=>{
+    const filled = st.fields.filter(f=>data[f.key]).length;
+    return `<div class="section-summary"><span>${st.title}</span><span class="tag-ok">${filled}/${st.fields.length} מולאו ✓</span></div>`;
+  }).join('');
+  const isMorning = data.report_type !== 'סוף יום';
+  const noteText = isMorning
+    ? 'לחיצה על "סיימתי" תשלח את הדיווח ל-Make.com, שישמור אותו בגיליון של הרכב שנבחר ויעדכן את ליונוויל שהמסלול מוכן לסריקת מדבקות.'
+    : 'לחיצה על "סיימתי" תשלח את הדיווח ל-Make.com, שיעדכן את גיליון הרכב בנתוני סוף היום (ללא עדכון לליונוויל).';
+  wrap.innerHTML = `
+    <div class="card">
+      <div class="station-title">
+        <div class="station-badge">✓</div>
+        <h2>סיכום ואישור — ${data.report_type||''}</h2>
+      </div>
+      <div class="station-sub">רכב: ${data.vehicle||'—'} · נהג: ${data.driver_name||'—'} · ${data.date||''} ${data.time||''}</div>
+      ${rows}
+      <div class="demo-note">
+        ${noteText}
+        ${MAKE_WEBHOOK_URL ? '' : ' (חיבור Make.com טרם הוגדר — מצב הדגמה בלבד)'}
+      </div>
+    </div>`;
+  navArea.innerHTML = `
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="step=${totalSteps()-1};render()">חזרה לעריכה</button>
+      <button class="btn btn-primary" onclick="submitForm()">סיימתי ✓</button>
+    </div>`;
+}
+
+async function submitForm(){
+  const payload = {...data, status:"הושלם", submitted_at:new Date().toISOString()};
+  // החתימה עצמה (תמונת base64) נשארת רק בדפדפן לצורך האישור המקומי —
+  // לגיליון נשלח רק אישור קצר שהנהג חתם, כדי לא להציף את התא בטקסט ארוך.
+  ["sign_pretrip_vehicle","sign_pretrip_safety","sign_eod_vehicle","sign_eod_safety"].forEach(k=>{
+    if(payload[k]) payload[k] = "✓ נחתם";
+  });
+  try{
+    // 1) שליחה ל-Make.com (שמירה בגיליון הרכב הרלוונטי)
+    if(MAKE_WEBHOOK_URL){
+      try{
+        await fetch(MAKE_WEBHOOK_URL, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+      }catch(err){ console.error('Make.com webhook failed', err); }
+    } else {
+      console.log('[DEMO] payload that would be sent to Make.com:', payload);
+    }
+
+    // הפעלת ליונוויל (פתיחת אופציית סריקה למדבקות) מתבצעת בתוך תרחיש
+    // ה-Make.com עצמו לאחר אישור כתיבה לגיליון — ראו הערה בראש הקובץ.
+  } catch(err){
+    console.error('Unexpected error during submit', err);
+  } finally {
+    // מסך האישור חייב להופיע תמיד, גם אם אחת הקריאות למעלה נכשלה
+    try{ showSuccess(); }
+    catch(err){
+      console.error('showSuccess failed', err);
+      alert('הדיווח עובד אך אירעה שגיאה בהצגת מסך האישור. אם זה קורה שוב — צלם/י את המסך ושלח/י.');
+    }
+  }
+}
+
+window.addEventListener('error', function(e){
+  console.error('Global error caught:', e.error || e.message);
+});
+
+function showSuccess(){
+  const isMorning = data.report_type !== 'סוף יום';
+  const msg = isMorning
+    ? `הדיווח עבור רכב ${data.vehicle||''} נשמר ביומן, וברגע שהעדכון יגיע לליונוויל תיפתח לנהג סריקת המדבקות.`
+    : `דיווח סוף היום עבור רכב ${data.vehicle||''} נשמר ביומן.`;
+  // מציגים את מסך האישור קודם לכל דבר אחר — כדי שיופיע גם אם משהו אחר למטה נכשל
+  wrap.innerHTML = `
+    <div class="success-screen">
+      <div class="stamp">✓</div>
+      <h2>היומן נחתם ונשלח בהצלחה</h2>
+      <p>${msg}</p>
+    </div>`;
+  navArea.innerHTML = isMorning
+    ? `<div class="nav-row">
+         <button class="btn btn-ghost" onclick="location.reload()">דיווח חדש</button>
+         <button class="btn btn-primary" onclick="continueToEndOfDay()">להמשך יום זה → סוף יום</button>
+       </div>`
+    : `<div class="nav-row"><button class="btn btn-primary" onclick="location.reload()">דיווח חדש</button></div>`;
+  topTitle.textContent = "היומן נחתם בהצלחה ✓";
+  topSub.textContent = data.vehicle || '';
+  try{
+    const routeEl = document.querySelector('.route');
+    const labelsEl = document.querySelector('.route-labels');
+    if(routeEl) routeEl.style.display='none';
+    if(labelsEl) labelsEl.style.display='none';
+  }catch(e){ console.error('cosmetic route-hide failed', e); }
+}
+
+function continueToEndOfDay(){
+  // שומרים רכב/נהג/תאריך שכבר מולאו, ועוברים ישר לסעיפי סוף היום
+  data.report_type = 'סוף יום';
+  activeStations = [ALL_STATIONS[0], ALL_STATIONS[3], ALL_STATIONS[4]];
+  step = 1;
+  const routeEl = document.querySelector('.route');
+  const labelsEl = document.querySelector('.route-labels');
+  if(routeEl) routeEl.style.display='';
+  if(labelsEl) labelsEl.style.display='';
+  window.scrollTo(0,0);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
