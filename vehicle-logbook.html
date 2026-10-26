@@ -222,6 +222,64 @@ const VEHICLES = [
   "780-02-802 דאף","609-12-903 טרנספורטר","569-60-302 קראפטר","500-83-903 טרנספורטר"
 ];
 
+// שמות הנהגים כפי שרשומים בליונוויל — לעדכון: להוסיף/להסיר שורה ברשימה
+const DRIVERS = [
+  "ליאור מאור",
+  "יובל פלוס",
+  "נדב עמר (עמר)",
+  "מאיר כהן",
+  "מארק גורמן",
+  "רן יצחק",
+  "דניאל משה",
+  "נדב רחמוט (אלחרוט)",
+  "בר אפרים",
+  "בוגדן מזור",
+  "אנטון דובצ'ק",
+  "דניס ויין (דניס )",
+  "יעקב קמראולי",
+  "עומרי ויצמן",
+  "יוסף סוויסה (סוויסה )",
+  "דביר גבריאל",
+  "אורי בן יעקב (אורי)",
+  "דניס קרוליק",
+  "בן שי",
+  "אליאור יעקב"
+].sort((a,b)=>a.localeCompare(b,'he'));
+
+// רשימת הנהגים מתעדכנת אוטומטית מגיליון Google ("רשימת נהגים — יומן רכב", עמודה A).
+// אם אין חיבור / הגיליון לא נגיש — נשארת הרשימה המובנית למעלה (או הרשימה האחרונה ששמורה במכשיר).
+const DRIVERS_SHEET_ID = "1hcKhiWfinz6O8yjKe-xurF8mrQXHEw76lH8krsla0ZM";
+function applyDrivers(list){
+  const clean = [...new Set(list.map(x=>String(x||'').trim()).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'he'));
+  if(clean.length < 3) return false;            // הגנה: רשימה ריקה/חלקית לא מחליפה את הקיימת
+  DRIVERS.length = 0; clean.forEach(x=>DRIVERS.push(x));
+  return true;
+}
+function loadDriversFromSheet(){
+  try{
+    const cached = JSON.parse(localStorage.getItem('drivers_cache')||'null');
+    if(cached && applyDrivers(cached) && typeof step!=='undefined' && step===0 && typeof render==='function') render();
+  }catch(e){}
+  const cb = '__driversCb';
+  const sc = document.createElement('script');
+  const timer = setTimeout(()=>{ sc.remove(); }, 8000);
+  window[cb] = (resp)=>{
+    clearTimeout(timer);
+    try{
+      const rows = (resp.table.rows||[]).map(r=>r.c && r.c[0] ? r.c[0].v : '');
+      if(applyDrivers(rows)){
+        try{ localStorage.setItem('drivers_cache', JSON.stringify(DRIVERS)); }catch(e){}
+        if(typeof step!=='undefined' && step===0 && !data.driver_name && typeof render==='function') render();
+      }
+    }catch(e){}
+    sc.remove();
+  };
+  sc.src = 'https://docs.google.com/spreadsheets/d/'+DRIVERS_SHEET_ID+'/gviz/tq?headers=1&tqx=responseHandler:'+cb;
+  sc.onerror = ()=>{ clearTimeout(timer); sc.remove(); };
+  document.head.appendChild(sc);
+}
+
 /* ================= FORM SCHEMA ================= */
 // type: yesno | text | textarea | time | date | select | photo | signature
 const ALL_STATIONS = [
@@ -229,7 +287,7 @@ const ALL_STATIONS = [
     id: 0, badge:"0", title:"פרטי דיווח", sub:"בחירת רכב, נהג ותאריך וסוג הדיווח",
     fields:[
       {key:"vehicle", label:"רכב", type:"select", options:VEHICLES, required:true},
-      {key:"driver_name", label:"שם מלא - נהג", type:"text", required:true},
+      {key:"driver_name", label:"שם מלא - נהג", type:"select", options:DRIVERS, required:true},
       {key:"date", label:"תאריך", type:"date", required:true},
       {key:"time", label:"שעה", type:"time", required:true},
       {key:"report_type", label:"סוג הדיווח", type:"select", options:["תחילת יום","סוף יום"], required:true},
@@ -629,6 +687,8 @@ function continueToEndOfDay(){
 }
 
 render();
+
+loadDriversFromSheet();
 </script>
 </body>
 </html>
